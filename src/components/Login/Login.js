@@ -15,12 +15,22 @@ const emailReducer = (state, action) => {
   }
 }
 
+const passwordReducer = (state, action) => {
+  switch (action.command) {
+    case 'CHANGE_PASSWORD':
+      return { value: action.val, isValid: action.val.trim().length > 6 }
+    case 'INPUT_BLUR':
+      return { value: state.value, isValid: state.value.trim().length > 6 }
+    default:
+      return { value: '', isValid: false }
+  }
+}
+
 const Login = (props) => {
-  const [enteredPassword, setEnteredPassword] = useState('');
-  const [passwordIsValid, setPasswordIsValid] = useState();
   const [formIsValid, setFormIsValid] = useState(false);
 
   const [emailState, dispatchEmail] = useReducer(emailReducer, { value: '', isValid: null })
+  const [passwordState, dispatchPassword] = useReducer(passwordReducer, { value: '', isValid: null })
 
   useEffect(() => {
     console.log('EFFECT RUNNING');
@@ -48,12 +58,12 @@ const Login = (props) => {
     dispatchEmail({ command: 'CHANGE_EMAIL', val: event.target.value })
 
     setFormIsValid(
-      event.target.value.includes('@') && enteredPassword.trim().length > 6
+      event.target.value.includes('@') && passwordState.isValid
     );
   };
 
   const passwordChangeHandler = (event) => {
-    setEnteredPassword(event.target.value);
+    dispatchPassword({command: 'CHANGE_PASSWORD', val: event.target.value})
 
     setFormIsValid(
       emailState.isValid && event.target.value.trim().length > 6
@@ -65,12 +75,12 @@ const Login = (props) => {
   };
 
   const validatePasswordHandler = () => {
-    setPasswordIsValid(enteredPassword.trim().length > 6);
+    dispatchPassword({command: 'INPUT_BLUR'})
   };
 
   const submitHandler = (event) => {
     event.preventDefault();
-    props.onLogin(emailState.value, enteredPassword);
+    props.onLogin(emailState.value, passwordState.value);
   };
 
   return (
@@ -90,14 +100,14 @@ const Login = (props) => {
           />
         </div>
         <div
-          className={`${classes.control} ${passwordIsValid === false ? classes.invalid : ''
+          className={`${classes.control} ${passwordState.isValid === false ? classes.invalid : ''
             }`}
         >
           <label htmlFor="password">Password</label>
           <input
             type="password"
             id="password"
-            value={enteredPassword}
+            value={passwordState.value}
             onChange={passwordChangeHandler}
             onBlur={validatePasswordHandler}
           />
